@@ -1,4 +1,9 @@
 # Local development orchestration for the Vecinita platform.
+# IMPORTANT: Use Docker Compose v2 (`docker compose ...`), not legacy
+# `docker-compose` v1. Legacy v1 can fail during recreate with:
+#   KeyError: 'ContainerConfig'
+# Supported command:
+#   docker compose --env-file .env -f infra/docker-compose.yml up -d --build
 #
 # NOTE: scraper-service and embedding-service are Modal serverless deployments
 # and are NOT included here. Deploy them separately:
