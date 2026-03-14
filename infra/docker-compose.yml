@@ -1,3 +1,12 @@
+# Local development orchestration for the Vecinita platform.
+#
+# NOTE: scraper-service and embedding-service are Modal serverless deployments
+# and are NOT included here. Deploy them separately:
+#   cd apps/backend/scraper-service  && modal deploy
+#   cd apps/backend/embedding-service && modal deploy
+# Then set VECINITA_SCRAPER_API_URL and VECINITA_EMBEDDING_API_URL in a .env
+# file or pass them as environment variables before running compose.
+
 services:
   frontend:
     build:
@@ -6,59 +15,56 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_PROXY_URL=http://localhost:8000
+      - VITE_VECINITA_MODEL_API_URL=${VITE_VECINITA_MODEL_API_URL:-http://localhost:8000}
+      - VITE_VECINITA_SCRAPER_API_URL=${VITE_VECINITA_SCRAPER_API_URL:-}
+      - VITE_VECINITA_EMBEDDING_API_URL=${VITE_VECINITA_EMBEDDING_API_URL:-}
     depends_on:
       - proxy
 
   proxy:
+    # Uses the service's own Dockerfile (apps/backend/proxy/Dockerfile)
     build:
-      context: ..
-      dockerfile: infra/docker/proxy.Dockerfile
+      context: ../apps/backend/proxy
+      dockerfile: Dockerfile
+    ports:
+      - "10000:10000"
+    environment:
+      - PORT=10000
+      - VECINITA_MODEL_API_URL=${VECINITA_MODEL_API_URL:-http://model-service:8000}
+      - VECINITA_SCRAPER_API_URL=${VECINITA_SCRAPER_API_URL:-}
+      - VECINITA_EMBEDDING_API_URL=${VECINITA_EMBEDDING_API_URL:-}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+    depends_on:
+      - model-service
+
+  model-service:
+    # Uses the service's own Dockerfile (apps/backend/model-service/Dockerfile)
+    build:
+      context: ../apps/backend/model-service
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - HOST=0.0.0.0
-      - PORT=8000
-      - SCRAPER_SERVICE_URL=http://scraper-service:8001
-      - MODEL_SERVICE_URL=http://model-service:8002
-      - EMBEDDING_SERVICE_URL=http://embedding-service:8003
-      - CORS_ORIGINS=["http://localhost:3000"]
+      - OLLAMA_HOST=http://ollama:11434
+      - APP_NAME=vecinita-model-local
     depends_on:
-      - scraper-service
-      - model-service
-      - embedding-service
+      ollama:
+        condition: service_healthy
 
-  scraper-service:
-    build:
-      context: ..
-      dockerfile: infra/docker/scraper.Dockerfile
+  ollama:
+    image: ollama/ollama:latest
     ports:
-      - "8001:8001"
-    environment:
-      - HOST=0.0.0.0
-      - PORT=8001
-      - MODEL_SERVICE_URL=http://model-service:8002
-      - EMBEDDING_SERVICE_URL=http://embedding-service:8003
-    depends_on:
-      - model-service
-      - embedding-service
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
-  model-service:
-    build:
-      context: ..
-      dockerfile: infra/docker/model.Dockerfile
-    ports:
-      - "8002:8002"
-    environment:
-      - HOST=0.0.0.0
-      - PORT=8002
-
-  embedding-service:
-    build:
-      context: ..
-      dockerfile: infra/docker/embedding.Dockerfile
-    ports:
-      - "8003:8003"
-    environment:
-      - HOST=0.0.0.0
-      - PORT=8003
+volumes:
+  ollama-data:

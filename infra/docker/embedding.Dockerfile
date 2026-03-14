@@ -1,20 +1,29 @@
+# vecinita-embedding is a Modal serverless service and is NOT run as a local container.
+#
+# To deploy to Modal:
+#   cd apps/backend/embedding-service
+#   pip install modal
+#   modal deploy main.py
+#
+# To run locally with Modal:
+#   modal serve main.py
+#
+# This Dockerfile installs dependencies for linting/testing purposes only.
 FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Copy shared packages and install them
-COPY packages/shared-schemas /packages/shared-schemas
-COPY packages/shared-config /packages/shared-config
-COPY packages/shared-logging /packages/shared-logging
-RUN pip install --no-cache-dir \
-    /packages/shared-schemas \
-    /packages/shared-config \
-    /packages/shared-logging
+COPY apps/backend/embedding-service/pyproject.toml ./
+COPY apps/backend/embedding-service/src ./src
+COPY apps/backend/embedding-service/main.py \
+     apps/backend/embedding-service/models.py \
+     ./
 
-# Copy and install the service
-COPY apps/backend/embedding-service /app
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir .
 
-EXPOSE 8003
-
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8003"]
+# No CMD: this service runs via Modal, not as a containerised process.
+# See apps/backend/embedding-service/README.md for deployment instructions.

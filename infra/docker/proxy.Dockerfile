@@ -1,20 +1,23 @@
-FROM python:3.11-slim
+# Repo-root-context build for vecinita-modal-proxy.
+# For standalone service-directory builds, use apps/backend/proxy/Dockerfile directly.
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
 
-# Copy shared packages and install them
-COPY packages/shared-schemas /packages/shared-schemas
-COPY packages/shared-config /packages/shared-config
-COPY packages/shared-logging /packages/shared-logging
-RUN pip install --no-cache-dir \
-    /packages/shared-schemas \
-    /packages/shared-config \
-    /packages/shared-logging
+RUN pip install --no-cache-dir uv
 
-# Copy and install the service
-COPY apps/backend/proxy /app
-RUN pip install --no-cache-dir .
+COPY apps/backend/proxy/pyproject.toml \
+     apps/backend/proxy/uv.lock \
+     apps/backend/proxy/README.md \
+     ./
+RUN uv sync --frozen --no-dev
 
-EXPOSE 8000
+COPY apps/backend/proxy/app ./app
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 10000
+
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]

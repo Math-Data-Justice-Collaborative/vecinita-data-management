@@ -27,8 +27,24 @@ docs/                    # Documentation
 - Python >= 3.11
 - Node.js >= 18
 - Docker and Docker Compose
+- [uv](https://github.com/astral-sh/uv) (proxy service)
+- [modal](https://modal.com/docs/guide) CLI (scraper and embedding services)
 
-### Start Everything
+### First-time setup
+
+This monorepo uses git submodules. After cloning, initialise them:
+
+```bash
+git submodule update --init --recursive
+```
+
+To pull the latest upstream changes into all submodules later:
+
+```bash
+git submodule update --remote --merge
+```
+
+### Start Everything (proxy + model + frontend)
 
 ```bash
 docker compose -f infra/docker-compose.yml up --build
@@ -36,19 +52,36 @@ docker compose -f infra/docker-compose.yml up --build
 
 ### Run a Single Backend Service
 
+**Proxy** (FastAPI, port 10000):
+
 ```bash
 cd apps/backend/proxy
+cp .env.example .env   # fill in Modal credentials and backend URLs
+pip install uv
+uv sync
+uv run uvicorn app.main:app --reload --port 10000
+```
 
-# Install shared packages
-pip install -e ../../packages/shared-schemas
-pip install -e ../../packages/shared-config
-pip install -e ../../packages/shared-logging
+**Model service** (local Ollama, port 8000):
 
-# Install the service
-pip install -e ".[dev]"
+```bash
+cd apps/backend/model-service
+docker compose up   # uses the service's own docker-compose.yml
+```
 
-# Start
-uvicorn src.main:app --reload --port 8000
+**Scraper service** (Modal serverless):
+
+```bash
+cd apps/backend/scraper-service
+cp .env.example .env
+modal serve   # hot-reloads locally via Modal sandbox
+```
+
+**Embedding service** (Modal serverless):
+
+```bash
+cd apps/backend/embedding-service
+modal serve main.py
 ```
 
 ### Run the Frontend
@@ -56,7 +89,7 @@ uvicorn src.main:app --reload --port 8000
 ```bash
 cd apps/frontend
 npm install
-npm run dev
+npm run dev   # Vite dev server on http://localhost:5173
 ```
 
 ## Code Standards

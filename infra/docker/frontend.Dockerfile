@@ -1,3 +1,4 @@
+# Vite + React frontend served via nginx.
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -8,16 +9,14 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM nginx:alpine AS runner
 
-WORKDIR /app
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-ENV NODE_ENV=production
-
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+# Serve on port 3000 to match the rest of the compose stack
+RUN sed -i 's/listen       80;/listen       3000;/g' /etc/nginx/conf.d/default.conf \
+    && sed -i 's/listen  \[::]:80;/listen  [::]:3000;/g' /etc/nginx/conf.d/default.conf
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["nginx", "-g", "daemon off;"]

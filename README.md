@@ -7,12 +7,12 @@ Monorepo for the Vecinita data management platform — a community-driven data c
 ```
 repo/
   apps/
-    frontend/              # React/Next.js UI
+    frontend/              # React/Vite UI  (submodule: vecinita-data-management-frontend)
     backend/
-      proxy/               # API gateway / BFF (auth, routing, aggregation)
-      scraper-service/     # Data collection and orchestration
-      model-service/       # ML inference service
-      embedding-service/   # Text vectorization service
+      proxy/               # API gateway / multi-backend proxy  (submodule: vecinita-modal-proxy)
+      scraper-service/     # Modal serverless scraping pipeline  (submodule: vecinita-scraper)
+      model-service/       # Modal / local LLM inference service (submodule: vecinita-model)
+      embedding-service/   # Modal serverless text vectorization  (submodule: vecinita-embedding)
 
   packages/
     shared-schemas/        # Pydantic/Zod shared types and API contracts
@@ -21,8 +21,8 @@ repo/
     shared-logging/        # Shared logging utilities
 
   infra/
-    docker-compose.yml     # Local development orchestration
-    docker/                # Per-service Dockerfiles
+    docker-compose.yml     # Local development orchestration (proxy + model + frontend)
+    docker/                # Per-service Dockerfiles (repo-root-context builds)
     k8s/                   # Kubernetes manifests
 
   scripts/                 # Developer utility scripts
@@ -50,13 +50,16 @@ Rules enforced by convention:
 
 ## Services
 
-| Service | Path | Description | Port |
-|---------|------|-------------|------|
-| frontend | `apps/frontend` | React UI | 3000 |
-| proxy | `apps/backend/proxy` | API gateway / BFF | 8000 |
-| scraper-service | `apps/backend/scraper-service` | Data scraping & orchestration | 8001 |
-| model-service | `apps/backend/model-service` | ML model inference | 8002 |
-| embedding-service | `apps/backend/embedding-service` | Text embedding / vectorization | 8003 |
+| Service | Path | Description | Deployment | Port |
+|---------|------|-------------|------------|------|
+| frontend | `apps/frontend` | React/Vite UI | Static / Docker | 3000 |
+| proxy | `apps/backend/proxy` | Multi-backend API gateway | Render (Docker) | 10000 |
+| scraper-service | `apps/backend/scraper-service` | Serverless scraping pipeline | Modal | — |
+| model-service | `apps/backend/model-service` | LLM inference (Ollama) | Modal / local Docker | 8000 |
+| embedding-service | `apps/backend/embedding-service` | Text embedding / vectorization | Modal | — |
+
+> **scraper-service** and **embedding-service** are Modal serverless deployments. They are not
+> included in the local docker-compose stack. See each service's README for `modal deploy` instructions.
 
 ## Shared Packages
 
@@ -69,30 +72,77 @@ Rules enforced by convention:
 
 ## Quick Start
 
-### Local Development (Docker Compose)
+### Clone with Submodules
+
+Each service lives in its own repository, wired into this monorepo as a git submodule.
+After cloning, initialise all submodules before running anything:
 
 ```bash
+git clone https://github.com/Math-Data-Justice-Collaborative/vecinita-data-management.git
+cd vecinita-data-management
+git submodule update --init --recursive
+```
+
+To pull the latest commits from all submodule remotes at once:
+
+```bash
+git submodule update --remote --merge
+```
+
+### Local Development (Docker Compose)
+
+The compose stack includes the **proxy**, **model-service** (with Ollama), and **frontend**.
+The scraper and embedding services are Modal deployments — set their public URLs in your `.env`
+before starting compose.
+
+```bash
+# Copy and fill in your Modal / Supabase credentials
+cp apps/backend/proxy/.env.example apps/backend/proxy/.env
+
 # From the repo root
 docker compose -f infra/docker-compose.yml up --build
 ```
 
-This starts all services:
-- Frontend: http://localhost:3000
-- Proxy: http://localhost:8000
-- Scraper: http://localhost:8001
-- Model: http://localhost:8002
-- Embedding: http://localhost:8003
+This starts:
+- Frontend:      http://localhost:3000
+- Proxy:         http://localhost:10000
+- Model service: http://localhost:8000 (backed by Ollama on :11434)
 
-### Running a Single Service
+### Running a Single Backend Service
 
-Each service has its own `README.md` with instructions. Example for the proxy:
+Each service has its own `README.md`. Example for the proxy:
 
 ```bash
 cd apps/backend/proxy
-pip install -e ../../packages/shared-schemas ../../packages/shared-config ../../packages/shared-logging
-pip install -e ".[dev]"
-uvicorn src.main:app --reload
+cp .env.example .env   # fill in Modal credentials and backend URLs
+pip install uv
+uv sync
+uv run uvicorn app.main:app --reload --port 10000
 ```
+
+For the model service (requires a running Ollama instance):
+
+```bash
+cd apps/backend/model-service
+docker compose up   # uses the service's own docker-compose.yml (includes Ollama)
+```
+
+### Deploying Modal Services
+
+```bash
+# Scraper
+cd apps/backend/scraper-service
+pip install modal
+modal deploy
+
+# Embedding
+cd apps/backend/embedding-service
+pip install modal
+modal deploy main.py
+```
+
+After deployment, copy the Modal endpoint URLs into your proxy `.env` as
+`VECINITA_SCRAPER_API_URL` and `VECINITA_EMBEDDING_API_URL`.
 
 ## Contributing
 

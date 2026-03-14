@@ -8,43 +8,61 @@ Vecinita is a community-driven data management platform built as a monorepo.
 
 ### frontend
 
-React/Next.js web application. Communicates **only** with the proxy service.
+React/Vite web application (`vecinita-data-management-frontend`). Communicates with backends
+directly via `VITE_*` environment variables (scraper, model, embedding) or through the proxy.
 
 ### proxy
 
-FastAPI API gateway and Backend-for-Frontend (BFF). Handles:
-- Authentication and session management  
-- Request routing to backend services
-- Response aggregation
+FastAPI multi-backend proxy (`vecinita-modal-proxy`). Deployed on **Render** as a Docker container.
+Keeps Modal credentials server-side and routes requests by path prefix:
 
-### scraper-service
-
-Data collection and orchestration service. Calls:
-- `model-service` — for ML inference on scraped content
-- `embedding-service` — for vectorizing scraped content
+| Path prefix | Routes to |
+|-------------|----------|
+| `/jobs/...` | scraper (path unchanged) |
+| `/model/...` | model (strips `/model`) |
+| `/embedding/...` | embedding (strips `/embedding`) |
 
 ### model-service
 
-ML model inference. Standalone lower-level service. Does **not** call any other service.
+LLM inference service (`vecinita-model`) using **Ollama**. Deployed to **Modal** for production.
+Can also be run locally with Docker Compose (ships its own `docker-compose.yml` that includes an
+Ollama sidecar).
+
+### scraper-service
+
+Serverless web-scraping pipeline (`vecinita-scraper`). Deployed exclusively to **Modal**.
+Uses Modal queues for job management and integrates with Supabase for storage.
+See `apps/backend/scraper-service/DEPLOYMENT.md`.
 
 ### embedding-service
 
-Text vectorization. Standalone lower-level service. Does **not** call any other service.
+Text vectorization service (`vecinita-embedding`). Deployed exclusively to **Modal**.
+Uses FastEmbed for open-source embeddings.
+See `apps/backend/embedding-service/README.md`.
+
+## Deployment Model
+
+```
+frontend  ─────────────────────────────────────────────────► scraper  (Modal)
+              │                                VITE_*        model     (Modal / local Ollama)
+              │                                              embedding (Modal)
+              ▼
+           proxy  ──── /jobs/...      ──►  scraper   (Modal)
+          (Render) ──── /model/...    ──►  model     (Modal / local Ollama)
+                   ──── /embedding/.. ──►  embedding (Modal)
+```
+
+All arrows represent **runtime HTTP calls**, not code imports.
 
 ## Dependency Graph
 
 ```
 frontend
-  └── proxy
-        ├── scraper-service
-        │     ├── model-service
-        │     └── embedding-service
-        ├── model-service
-        └── embedding-service
+  └── proxy (Render)
+        ├── scraper-service   (Modal)
+        ├── model-service     (Modal / local Ollama)
+        └── embedding-service (Modal)
 ```
-
-All arrows represent **runtime HTTP calls**, not code imports.  
-Cross-service calls use typed clients from `packages/service-clients`.
 
 ## Shared Packages
 
@@ -64,11 +82,12 @@ Cross-service calls use typed clients from `packages/service-clients`.
 
 ## Communication Patterns
 
-| Caller | Callee | Protocol |
-|--------|--------|----------|
-| frontend | proxy | HTTPS |
-| proxy | scraper-service | HTTP (internal) |
-| proxy | model-service | HTTP (internal) |
-| proxy | embedding-service | HTTP (internal) |
-| scraper-service | model-service | HTTP (internal) |
-| scraper-service | embedding-service | HTTP (internal) |
+| Caller | Callee | Protocol | Notes |
+|--------|--------|----------|---------|
+| frontend | proxy | HTTPS | via Render public URL |
+| frontend | scraper | HTTPS | direct via `VITE_*` env var |
+| frontend | model | HTTPS | direct via `VITE_*` env var |
+| frontend | embedding | HTTPS | direct via `VITE_*` env var |
+| proxy | scraper | HTTPS | via `VECINITA_SCRAPER_API_URL` |
+| proxy | model | HTTPS | via `VECINITA_MODEL_API_URL` |
+| proxy | embedding | HTTPS | via `VECINITA_EMBEDDING_API_URL` |
