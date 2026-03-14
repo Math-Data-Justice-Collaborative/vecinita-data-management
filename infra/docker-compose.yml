@@ -12,12 +12,13 @@ services:
     build:
       context: ../apps/frontend
       dockerfile: ../../infra/docker/frontend.Dockerfile
+      args:
+        # VITE_* vars are baked into the bundle at build time — must be args, not runtime env
+        - VITE_VECINITA_MODEL_API_URL=${VITE_VECINITA_MODEL_API_URL:-https://vecinita--vecinita-model-api.modal.run}
+        - VITE_VECINITA_SCRAPER_API_URL=${VITE_VECINITA_SCRAPER_API_URL:-https://vecinita--vecinita-scraper-api-fastapi.modal.run}
+        - VITE_VECINITA_EMBEDDING_API_URL=${VITE_VECINITA_EMBEDDING_API_URL:-https://vecinita--vecinita-embedding-embeddingservicecontainer-api.modal.run}
     ports:
       - "3000:3000"
-    environment:
-      - VITE_VECINITA_MODEL_API_URL=${VITE_VECINITA_MODEL_API_URL:-http://localhost:8000}
-      - VITE_VECINITA_SCRAPER_API_URL=${VITE_VECINITA_SCRAPER_API_URL:-}
-      - VITE_VECINITA_EMBEDDING_API_URL=${VITE_VECINITA_EMBEDDING_API_URL:-}
     depends_on:
       - proxy
 
@@ -30,9 +31,12 @@ services:
       - "10000:10000"
     environment:
       - PORT=10000
+      # Modal credentials — required by proxy Settings; forwarded server-side to every upstream
+      - MODAL_TOKEN_ID=${MODAL_TOKEN_ID}
+      - MODAL_TOKEN_SECRET=${MODAL_TOKEN_SECRET}
       - VECINITA_MODEL_API_URL=${VECINITA_MODEL_API_URL:-http://model-service:8000}
-      - VECINITA_SCRAPER_API_URL=${VECINITA_SCRAPER_API_URL:-}
-      - VECINITA_EMBEDDING_API_URL=${VECINITA_EMBEDDING_API_URL:-}
+      - VECINITA_SCRAPER_API_URL=${VECINITA_SCRAPER_API_URL:-https://vecinita--vecinita-scraper-api-fastapi.modal.run}
+      - VECINITA_EMBEDDING_API_URL=${VECINITA_EMBEDDING_API_URL:-https://vecinita--vecinita-embedding-embeddingservicecontainer-api.modal.run}
       - CORS_ORIGINS=${CORS_ORIGINS:-*}
       - ENVIRONMENT=development
       - LOG_LEVEL=INFO
@@ -65,6 +69,20 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
+
+  # One-shot service: pulls llama3.2 into the shared ollama-data volume then exits.
+  # On subsequent runs the volume cache means no re-download.
+  ollama-setup:
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    volumes:
+      - ollama-data:/root/.ollama
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama", "pull", "llama3.2"]
+    restart: "no"
 
 volumes:
   ollama-data:
