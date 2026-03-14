@@ -34,7 +34,8 @@ services:
       # Modal credentials — required by proxy Settings; forwarded server-side to every upstream
       - MODAL_TOKEN_ID=${MODAL_TOKEN_ID}
       - MODAL_TOKEN_SECRET=${MODAL_TOKEN_SECRET}
-      - VECINITA_MODEL_API_URL=${VECINITA_MODEL_API_URL:-http://model-service:8000}
+      # Force model to the local container; scraper/embedding remain as Modal cloud URLs
+      - VECINITA_MODEL_API_URL=http://model-service:8000
       - VECINITA_SCRAPER_API_URL=${VECINITA_SCRAPER_API_URL:-https://vecinita--vecinita-scraper-api-fastapi.modal.run}
       - VECINITA_EMBEDDING_API_URL=${VECINITA_EMBEDDING_API_URL:-https://vecinita--vecinita-embedding-embeddingservicecontainer-api.modal.run}
       - CORS_ORIGINS=${CORS_ORIGINS:-*}
@@ -49,7 +50,7 @@ services:
       context: ../apps/backend/model-service
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8003:8000"
     environment:
       - OLLAMA_HOST=http://ollama:11434
       - APP_NAME=vecinita-model-local
