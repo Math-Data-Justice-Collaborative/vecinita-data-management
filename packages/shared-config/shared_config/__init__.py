@@ -25,7 +25,14 @@ class BaseServiceSettings(BaseSettings):
     embedding_service_url: str = "http://localhost:8003"
 
     # CORS — set as a JSON array string: CORS_ORIGINS='["https://example.com"]'
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # Defaults include the standard data-management-frontend dev port (5174)
+    # and the chat-frontend dev ports.  In production override this via env var
+    # to the Render frontend hostname(s) only.
+    cors_origins: list[str] = [
+        "http://localhost:5174",
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ]
 
 
 @lru_cache
