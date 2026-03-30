@@ -63,10 +63,13 @@ jobs:
             for section, (path_value, url_suffix) in expected_submodules.items():
               if section not in parser:
                 raise SystemExit(f'Missing submodule section: {section}')
+
               actual_path = parser[section].get('path')
               actual_url = parser[section].get('url')
+
               if actual_path != path_value:
                 raise SystemExit(f'Unexpected path for {section}: {actual_path}')
+
               if not actual_url or not actual_url.endswith(url_suffix):
                 raise SystemExit(f'Unexpected URL for {section}: {actual_url}')
 
