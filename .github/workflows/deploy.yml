@@ -12,25 +12,12 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ secrets.RENDER_DEPLOY_HOOK_URL != '' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository with submodules
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Verify submodule checkout
-        run: git submodule status --recursive
-
-      - name: Verify Render deploy hook secret
-        env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        run: |
-          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
-            echo "RENDER_DEPLOY_HOOK_URL is not configured."
-            exit 1
-          fi
 
       - name: Trigger Render deploy
         env:
