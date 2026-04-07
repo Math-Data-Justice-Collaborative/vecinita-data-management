@@ -6,7 +6,6 @@
 apps/
   frontend/              # React/Next.js UI
   backend/
-    proxy/               # FastAPI API gateway
     scraper-service/     # Data collection
     model-service/       # ML inference
     embedding-service/   # Text vectorization
@@ -27,7 +26,6 @@ docs/                    # Documentation
 - Python >= 3.11
 - Node.js >= 18
 - Docker and Docker Compose
-- [uv](https://github.com/astral-sh/uv) (proxy service)
 - [modal](https://modal.com/docs/guide) CLI (scraper and embedding services)
 
 ### First-time setup
@@ -44,7 +42,7 @@ To pull the latest upstream changes into all submodules later:
 git submodule update --remote --merge
 ```
 
-### Start Everything (proxy + model + frontend)
+### Start Everything (model + frontend)
 
 ```bash
 docker compose -f infra/docker-compose.yml up --build
@@ -52,15 +50,8 @@ docker compose -f infra/docker-compose.yml up --build
 
 ### Run a Single Backend Service
 
-**Proxy** (FastAPI, port 10000):
-
-```bash
-cd apps/backend/proxy
-cp .env.example .env   # fill in Modal credentials and backend URLs
-pip install uv
-uv sync
-uv run uvicorn app.main:app --reload --port 10000
-```
+No proxy service is required. Frontend calls scraper/model/embedding directly
+through `VITE_*` endpoint environment variables.
 
 **Model service** (local Ollama, port 8000):
 

@@ -4,7 +4,6 @@ This directory contains all backend services for the Vecinita platform.
 
 | Service | Port | Description |
 |---------|------|-------------|
-| [proxy](proxy/) | 8000 | API gateway and BFF |
 | [scraper-service](scraper-service/) | 8001 | Data collection and orchestration |
 | [model-service](model-service/) | 8002 | ML model inference |
 | [embedding-service](embedding-service/) | 8003 | Text embedding / vectorization |

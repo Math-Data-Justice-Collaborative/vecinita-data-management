@@ -122,8 +122,9 @@ pip install modal
 modal deploy main.py
 ```
 
-After deployment, copy the Modal endpoint URLs into your proxy `.env` as
-`VECINITA_SCRAPER_API_URL` and `VECINITA_EMBEDDING_API_URL`.
+After deployment, copy the Modal endpoint URLs into your frontend `.env` as
+`VITE_VECINITA_SCRAPER_API_URL` (required) and optionally
+`VITE_VECINITA_MODEL_API_URL` / `VITE_VECINITA_EMBEDDING_API_URL`.
 
 ## Contributing
 
