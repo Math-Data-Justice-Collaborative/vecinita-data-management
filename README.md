@@ -50,13 +50,13 @@ Rules enforced by convention:
 
 | Service | Path | Description | Deployment | Port |
 |---------|------|-------------|------------|------|
-| frontend | `apps/frontend` | React/Vite UI | Static / Docker | 3000 |
-| scraper-service | `apps/backend/scraper-service` | Serverless scraping pipeline | Modal | — |
+| frontend | `apps/frontend` | React/Vite UI | Docker web service | 10000 |
+| scraper-service | `apps/backend/scraper-service` | Scraping API and worker pipeline | Modal / Docker web service | 10000 |
 | model-service | `apps/backend/model-service` | LLM inference (Ollama) | Modal / local Docker | 8000 |
 | embedding-service | `apps/backend/embedding-service` | Text embedding / vectorization | Modal | — |
 
-> **scraper-service** and **embedding-service** are Modal serverless deployments. They are not
-> included in the local docker-compose stack. See each service's README for `modal deploy` instructions.
+> **embedding-service** remains a Modal serverless deployment. **scraper-service** can still be
+> deployed to Modal, but it now also includes a Docker web-service path for Render.
 
 ## Shared Packages
 
