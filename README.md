@@ -9,7 +9,6 @@ repo/
   apps/
     frontend/              # React/Vite UI  (submodule: vecinita-data-management-frontend)
     backend/
-      proxy/               # API gateway / multi-backend proxy  (submodule: vecinita-modal-proxy)
       scraper-service/     # Modal serverless scraping pipeline  (submodule: vecinita-scraper)
       model-service/       # Modal / local LLM inference service (submodule: vecinita-model)
       embedding-service/   # Modal serverless text vectorization  (submodule: vecinita-embedding)
@@ -21,7 +20,7 @@ repo/
     shared-logging/        # Shared logging utilities
 
   infra/
-    docker-compose.yml     # Local development orchestration (proxy + model + frontend)
+    docker-compose.yml     # Local development orchestration (model + frontend)
     docker/                # Per-service Dockerfiles (repo-root-context builds)
     k8s/                   # Kubernetes manifests
 
@@ -32,10 +31,9 @@ repo/
 ## Dependency Model
 
 ```
-frontend  →  proxy
-proxy     →  scraper-service
-proxy     →  model-service
-proxy     →  embedding-service
+frontend  →  scraper-service
+frontend  →  model-service
+frontend  →  embedding-service
 
 scraper-service  →  model-service
 scraper-service  →  embedding-service
@@ -53,7 +51,6 @@ Rules enforced by convention:
 | Service | Path | Description | Deployment | Port |
 |---------|------|-------------|------------|------|
 | frontend | `apps/frontend` | React/Vite UI | Static / Docker | 3000 |
-| proxy | `apps/backend/proxy` | Multi-backend API gateway | Render (Docker) | 10000 |
 | scraper-service | `apps/backend/scraper-service` | Serverless scraping pipeline | Modal | — |
 | model-service | `apps/backend/model-service` | LLM inference (Ollama) | Modal / local Docker | 8000 |
 | embedding-service | `apps/backend/embedding-service` | Text embedding / vectorization | Modal | — |
@@ -91,34 +88,18 @@ git submodule update --remote --merge
 
 ### Local Development (Docker Compose)
 
-The compose stack includes the **proxy**, **model-service** (with Ollama), and **frontend**.
+The compose stack includes the **model-service** (with Ollama) and **frontend**.
 The scraper and embedding services are Modal deployments — set their public URLs in your `.env`
 before starting compose.
 
 ```bash
-# Copy and fill in your Modal / Supabase credentials
-cp apps/backend/proxy/.env.example apps/backend/proxy/.env
-
 # From the repo root
 docker compose -f infra/docker-compose.yml up --build
 ```
 
 This starts:
 - Frontend:      http://localhost:3000
-- Proxy:         http://localhost:10000
 - Model service: http://localhost:8000 (backed by Ollama on :11434)
-
-### Running a Single Backend Service
-
-Each service has its own `README.md`. Example for the proxy:
-
-```bash
-cd apps/backend/proxy
-cp .env.example .env   # fill in Modal credentials and backend URLs
-pip install uv
-uv sync
-uv run uvicorn app.main:app --reload --port 10000
-```
 
 For the model service (requires a running Ollama instance):
 

@@ -24,30 +24,6 @@ services:
         - VITE_VECINITA_EMBEDDING_API_URL=${VITE_VECINITA_EMBEDDING_API_URL:-https://vecinita--vecinita-embedding-embeddingservicecontainer-api.modal.run}
     ports:
       - "3000:3000"
-    depends_on:
-      - proxy
-
-  proxy:
-    # Uses the service's own Dockerfile (apps/backend/proxy/Dockerfile)
-    build:
-      context: ../apps/backend/proxy
-      dockerfile: Dockerfile
-    ports:
-      - "10000:10000"
-    environment:
-      - PORT=10000
-      # Modal credentials — required by proxy Settings; forwarded server-side to every upstream
-      - MODAL_TOKEN_ID=${MODAL_TOKEN_ID}
-      - MODAL_TOKEN_SECRET=${MODAL_TOKEN_SECRET}
-      # Force model to the local container; scraper/embedding remain as Modal cloud URLs
-      - VECINITA_MODEL_API_URL=http://model-service:8000
-      - VECINITA_SCRAPER_API_URL=${VECINITA_SCRAPER_API_URL:-https://vecinita--vecinita-scraper-api-fastapi.modal.run}
-      - VECINITA_EMBEDDING_API_URL=${VECINITA_EMBEDDING_API_URL:-https://vecinita--vecinita-embedding-embeddingservicecontainer-api.modal.run}
-      - CORS_ORIGINS=${CORS_ORIGINS:-*}
-      - ENVIRONMENT=development
-      - LOG_LEVEL=INFO
-    depends_on:
-      - model-service
 
   model-service:
     # Uses the service's own Dockerfile (apps/backend/model-service/Dockerfile)

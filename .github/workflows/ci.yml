@@ -52,7 +52,6 @@ jobs:
           parser.read('.gitmodules')
 
           expected_submodules = {
-              'submodule "apps/backend/proxy"': ('apps/backend/proxy', 'Math-Data-Justice-Collaborative/vecinita-modal-proxy.git'),
               'submodule "apps/backend/model-service"': ('apps/backend/model-service', 'Math-Data-Justice-Collaborative/vecinita-model.git'),
               'submodule "apps/backend/scraper-service"': ('apps/backend/scraper-service', 'Math-Data-Justice-Collaborative/vecinita-scraper.git'),
               'submodule "apps/backend/embedding-service"': ('apps/backend/embedding-service', 'Math-Data-Justice-Collaborative/vecinita-embedding.git'),

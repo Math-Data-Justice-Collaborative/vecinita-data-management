@@ -1,7 +1,3 @@
-[submodule "apps/backend/proxy"]
-	path = apps/backend/proxy
-	url = https://github.com/Math-Data-Justice-Collaborative/vecinita-modal-proxy.git
-	branch = main
 [submodule "apps/backend/model-service"]
 	path = apps/backend/model-service
 	url = https://github.com/Math-Data-Justice-Collaborative/vecinita-model.git
