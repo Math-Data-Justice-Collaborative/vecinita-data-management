@@ -126,6 +126,22 @@ After deployment, copy the Modal endpoint URLs into your frontend `.env` as
 `VITE_VECINITA_SCRAPER_API_URL` (required) and optionally
 `VITE_VECINITA_MODEL_API_URL` / `VITE_VECINITA_EMBEDDING_API_URL`.
 
+### Deploying the API on Render
+
+The data-management API Render service currently builds this repository from the
+repo root. For that reason, the repo includes a root-level `Dockerfile` that
+packages `apps/backend/scraper-service` for Render.
+
+Recommended Render settings for the API service:
+
+- Runtime: Docker
+- Root Directory: leave empty unless you intentionally reconfigure the service
+- Dockerfile Path: `Dockerfile`
+- Health Check Path: `/health`
+
+If you later move the Render service to a subdirectory-based build, update the
+service settings to point directly at `apps/backend/scraper-service/Dockerfile`.
+
 ## Contributing
 
 See [docs/contributing.md](docs/contributing.md) for development guidelines, branching strategy, and PR process.
