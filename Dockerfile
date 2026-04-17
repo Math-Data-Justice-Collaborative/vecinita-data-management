@@ -23,4 +23,4 @@ EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=5 \
     CMD curl -f http://localhost:${PORT:-10000}/health || exit 1
 
-CMD ["sh", "-c", "uvicorn vecinita_scraper.api.server:app --host 0.0.0.0 --port ${PORT:-10000}"]
+CMD ["sh", "-c", "uvicorn vecinita_scraper.api.server:create_app --factory --host 0.0.0.0 --port ${PORT:-10000}"]
