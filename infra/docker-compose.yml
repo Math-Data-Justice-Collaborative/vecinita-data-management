@@ -6,9 +6,8 @@
 #   docker compose --env-file .env -f infra/docker-compose.yml up -d --build
 #
 # NOTE: scraper-service and embedding-service are Modal serverless deployments
-# and are NOT included here. Deploy them separately:
-#   cd apps/backend/scraper-service  && modal deploy
-#   cd apps/backend/embedding-service && modal deploy
+# and are NOT included here. Deploy them from the vecinita-scraper / vecinita-embedding
+# repositories (or the vecinita monorepo `services/scraper`, `services/embedding-modal`).
 # Then set VECINITA_SCRAPER_API_URL and VECINITA_EMBEDDING_API_URL in a .env
 # file or pass them as environment variables before running compose.
 
@@ -26,10 +25,9 @@ services:
       - "3000:3000"
 
   model-service:
-    # Uses the service's own Dockerfile (apps/backend/model-service/Dockerfile)
     build:
-      context: ../apps/backend/model-service
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: infra/docker/model-service.Dockerfile
     ports:
       - "8003:8000"
     environment:

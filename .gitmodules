@@ -1,15 +1,3 @@
-[submodule "apps/backend/model-service"]
-	path = apps/backend/model-service
-	url = https://github.com/Math-Data-Justice-Collaborative/vecinita-model.git
-	branch = main
-[submodule "apps/backend/scraper-service"]
-	path = apps/backend/scraper-service
-	url = https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper.git
-	branch = main
-[submodule "apps/backend/embedding-service"]
-	path = apps/backend/embedding-service
-	url = https://github.com/Math-Data-Justice-Collaborative/vecinita-embedding.git
-	branch = main
 [submodule "apps/frontend"]
 	path = apps/frontend
 	url = https://github.com/Math-Data-Justice-Collaborative/vecinita-data-management-frontend.git

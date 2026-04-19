@@ -2,16 +2,22 @@
 
 Monorepo for the Vecinita data management platform — a community-driven data collection and analysis system.
 
+When checked out inside the **vecinita** umbrella repo, this tree lives at
+`services/data-management-api/` (clone from [github.com/Math-Data-Justice-Collaborative/vecinita](https://github.com/Math-Data-Justice-Collaborative/vecinita)).
+
+**Remote-only backends (feature `003-consolidate-scraper-dm`)**: configure HTTP origins via
+`SCRAPER_SERVICE_BASE_URL`, `EMBEDDING_SERVICE_BASE_URL`, and `MODEL_SERVICE_BASE_URL` (see
+`packages/shared-config` `BaseServiceSettings`, which also accepts legacy `VECINITA_*_API_URL`
+names). Prefer `packages/service-clients` (`ScraperClient`, `EmbeddingClient`, `ModelClient`) for
+service calls — the old `apps/backend/{scraper,embedding,model}-service` git submodules are removed.
+
 ## Repository Structure
 
 ```
 repo/
   apps/
     frontend/              # React/Vite UI  (submodule: vecinita-data-management-frontend)
-    backend/
-      scraper-service/     # Modal serverless scraping pipeline  (submodule: vecinita-scraper)
-      model-service/       # Modal / local LLM inference service (submodule: vecinita-model)
-      embedding-service/   # Modal serverless text vectorization  (submodule: vecinita-embedding)
+    backend/               # Placeholder / docs only (see apps/backend/README.md)
 
   packages/
     shared-schemas/        # Pydantic/Zod shared types and API contracts
@@ -21,42 +27,37 @@ repo/
 
   infra/
     docker-compose.yml     # Local development orchestration (model + frontend)
-    docker/                # Per-service Dockerfiles (repo-root-context builds)
+    docker/                # Dockerfiles (including upstream clones for compose)
     k8s/                   # Kubernetes manifests
 
   scripts/                 # Developer utility scripts
   docs/                    # Architecture and developer documentation
 ```
 
+Deployable scraper / embedding / model **source trees** live in separate repositories (and in the
+vecinita monorepo as `services/scraper`, `services/embedding-modal`, `services/model-modal`).
+
 ## Dependency Model
 
 ```
-frontend  →  scraper-service
-frontend  →  model-service
-frontend  →  embedding-service
-
-scraper-service  →  model-service
-scraper-service  →  embedding-service
+frontend  →  scraper / model / embedding  (HTTP, via VITE_* or remote URLs)
 ```
 
 Rules enforced by convention:
+
 - `apps` can depend on `packages`; `packages` must **not** depend on `apps`
-- Lower-level services (`model-service`, `embedding-service`) do **not** depend on higher-level ones
 - No circular dependencies
-- Cross-service communication happens over HTTP/gRPC, **never** by importing another app's internals
+- Cross-service communication happens over HTTP, **not** by importing another deployable’s Python package
 - Shared code (schemas, clients, utilities) lives in `packages/`
 
 ## Services
 
-| Service | Path | Description | Deployment | Port |
-|---------|------|-------------|------------|------|
-| frontend | `apps/frontend` | React/Vite UI | Docker web service | 10000 |
-| scraper-service | `apps/backend/scraper-service` | Scraping API and worker pipeline | Modal / Docker web service | 10000 |
-| model-service | `apps/backend/model-service` | LLM inference (Ollama) | Modal / local Docker | 8000 |
-| embedding-service | `apps/backend/embedding-service` | Text embedding / vectorization | Modal | — |
-
-> **embedding-service** remains a Modal serverless deployment. **scraper-service** can still be
-> deployed to Modal, but it now also includes a Docker web-service path for Render.
+| Capability | Where to run / build | Notes |
+|------------|------------------------|-------|
+| frontend | `apps/frontend` (submodule) | Vite UI |
+| scraper | [vecinita-scraper](https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper) · monorepo `services/scraper` | Modal + Docker |
+| model | [vecinita-model](https://github.com/Math-Data-Justice-Collaborative/vecinita-model) · monorepo `services/model-modal` | Modal + local compose |
+| embedding | [vecinita-embedding](https://github.com/Math-Data-Justice-Collaborative/vecinita-embedding) · monorepo `services/embedding-modal` | Modal |
 
 ## Shared Packages
 
@@ -69,78 +70,59 @@ Rules enforced by convention:
 
 ## Quick Start
 
-### Clone with Submodules
+### Clone with submodules
 
-Each service lives in its own repository, wired into this monorepo as a git submodule.
-After cloning, initialise all submodules before running anything:
+Only the **frontend** remains a nested submodule:
 
 ```bash
 git clone https://github.com/Math-Data-Justice-Collaborative/vecinita-data-management.git
 cd vecinita-data-management
-git submodule update --init --recursive
+git submodule update --init apps/frontend
 ```
 
-To pull the latest commits from all submodule remotes at once:
+From the **vecinita** monorepo root, initialise this repo with:
 
 ```bash
-git submodule update --remote --merge
+git submodule update --init services/data-management-api
 ```
 
 ### Local Development (Docker Compose)
 
-The compose stack includes the **model-service** (with Ollama) and **frontend**.
-The scraper and embedding services are Modal deployments — set their public URLs in your `.env`
-before starting compose.
+Set remote scraper/embedding URLs in `.env` (or rely on compose defaults pointing at Modal), then:
 
 ```bash
-# From the repo root
 docker compose -f infra/docker-compose.yml up --build
 ```
 
 This starts:
-- Frontend:      http://localhost:3000
-- Model service: http://localhost:8000 (backed by Ollama on :11434)
 
-For the model service (requires a running Ollama instance):
-
-```bash
-cd apps/backend/model-service
-docker compose up   # uses the service's own docker-compose.yml (includes Ollama)
-```
+- Frontend: http://localhost:3000
+- Model service: http://localhost:8003 (Ollama-backed image built from `infra/docker/model-service.Dockerfile`)
 
 ### Deploying Modal Services
 
+Use the upstream repositories (same code as vecinita monorepo `services/*`):
+
 ```bash
-# Scraper
-cd apps/backend/scraper-service
+git clone https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper.git
+cd vecinita-scraper
 pip install modal
 modal deploy
-
-# Embedding
-cd apps/backend/embedding-service
-pip install modal
-modal deploy main.py
 ```
 
-After deployment, copy the Modal endpoint URLs into your frontend `.env` as
-`VITE_VECINITA_SCRAPER_API_URL` (required) and optionally
-`VITE_VECINITA_MODEL_API_URL` / `VITE_VECINITA_EMBEDDING_API_URL`.
+Repeat for embedding/model from their repos as needed.
 
 ### Deploying the API on Render
 
-The data-management API Render service currently builds this repository from the
-repo root. For that reason, the repo includes a root-level `Dockerfile` that
-packages `apps/backend/scraper-service` for Render.
+- **vecinita monorepo**: production image for `vecinita-data-management-api-v1` is built from
+  `services/scraper` (see root `render.yaml` — avoids nested submodule checkouts).
+- **Standalone clone of this repo**: the root `Dockerfile` clones [vecinita-scraper](https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper) at build time so the image does not depend on `apps/backend/scraper-service`.
 
-Recommended Render settings for the API service:
+Recommended settings when building this repository directly:
 
 - Runtime: Docker
-- Root Directory: leave empty unless you intentionally reconfigure the service
 - Dockerfile Path: `Dockerfile`
 - Health Check Path: `/health`
-
-If you later move the Render service to a subdirectory-based build, update the
-service settings to point directly at `apps/backend/scraper-service/Dockerfile`.
 
 ## Contributing
 

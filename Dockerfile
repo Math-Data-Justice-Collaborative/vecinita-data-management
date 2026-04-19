@@ -8,12 +8,19 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    git \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Render currently builds this repository from the repo root. Mirror the
-# scraper-service Docker build here so root-level Dockerfile resolution works.
-COPY apps/backend/scraper-service/pyproject.toml apps/backend/scraper-service/README.md ./
-COPY apps/backend/scraper-service/src ./src
+# Nested `apps/backend/scraper-service` submodules were removed (003-consolidate-scraper-dm).
+# The vecinita **monorepo** builds production images from `services/scraper/` (see root `render.yaml`).
+# Standalone clones of this repo fetch the same sources at build time:
+ARG VECINITA_SCRAPER_REPO=https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper.git
+ARG VECINITA_SCRAPER_REF=main
+RUN git clone --depth 1 --branch "${VECINITA_SCRAPER_REF}" "${VECINITA_SCRAPER_REPO}" /tmp/vecinita-scraper \
+    && cp /tmp/vecinita-scraper/pyproject.toml /tmp/vecinita-scraper/README.md /app/ \
+    && cp -a /tmp/vecinita-scraper/src /app/src \
+    && rm -rf /tmp/vecinita-scraper
 
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
     && pip install --no-cache-dir .

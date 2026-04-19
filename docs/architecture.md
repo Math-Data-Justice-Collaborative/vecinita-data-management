@@ -14,20 +14,16 @@ directly via `VITE_*` environment variables (scraper, model, embedding).
 ### model-service
 
 LLM inference service (`vecinita-model`) using **Ollama**. Deployed to **Modal** for production.
-Can also be run locally with Docker Compose (ships its own `docker-compose.yml` that includes an
-Ollama sidecar).
+Local compose builds from `infra/docker/model-service.Dockerfile`, which clones the upstream repo.
 
 ### scraper-service
 
-Serverless web-scraping pipeline (`vecinita-scraper`). Deployed exclusively to **Modal**.
-Uses Modal queues for job management and writes directly to PostgreSQL.
-See `apps/backend/scraper-service/DEPLOYMENT.md`.
+Serverless web-scraping pipeline (`vecinita-scraper`). Deployed to **Modal** and as a Docker image
+from the vecinita monorepo `services/scraper` directory (see monorepo `render.yaml`).
 
 ### embedding-service
 
 Text vectorization service (`vecinita-embedding`). Deployed exclusively to **Modal**.
-Uses FastEmbed for open-source embeddings.
-See `apps/backend/embedding-service/README.md`.
 
 ## Deployment Model
 
@@ -67,7 +63,7 @@ frontend
 ## Communication Patterns
 
 | Caller | Callee | Protocol | Notes |
-|--------|--------|----------|---------|
+|--------|--------|----------|-------|
 | frontend | scraper | HTTPS | direct via `VITE_*` env var |
 | frontend | model | HTTPS | direct via `VITE_*` env var |
 | frontend | embedding | HTTPS | direct via `VITE_*` env var |

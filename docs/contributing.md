@@ -4,11 +4,8 @@
 
 ```
 apps/
-  frontend/              # React/Next.js UI
-  backend/
-    scraper-service/     # Data collection
-    model-service/       # ML inference
-    embedding-service/   # Text vectorization
+  frontend/              # React/Vite UI (git submodule)
+  backend/               # Legacy path — no longer contains service submodules (see apps/backend/README.md)
 packages/
   shared-schemas/        # Pydantic API types
   service-clients/       # Typed HTTP clients
@@ -26,20 +23,14 @@ docs/                    # Documentation
 - Python >= 3.11
 - Node.js >= 18
 - Docker and Docker Compose
-- [modal](https://modal.com/docs/guide) CLI (scraper and embedding services)
+- [modal](https://modal.com/docs/guide) CLI (for Modal-backed scraper/embedding deploys)
 
 ### First-time setup
 
-This monorepo uses git submodules. After cloning, initialise them:
+After cloning, initialise the **frontend** submodule:
 
 ```bash
-git submodule update --init --recursive
-```
-
-To pull the latest upstream changes into all submodules later:
-
-```bash
-git submodule update --remote --merge
+git submodule update --init apps/frontend
 ```
 
 ### Start Everything (model + frontend)
@@ -53,25 +44,22 @@ docker compose -f infra/docker-compose.yml up --build
 No proxy service is required. Frontend calls scraper/model/embedding directly
 through `VITE_*` endpoint environment variables.
 
-**Model service** (local Ollama, port 8000):
+**Model service** (local Ollama via compose): built from `infra/docker/model-service.Dockerfile`
+(clones [vecinita-model](https://github.com/Math-Data-Justice-Collaborative/vecinita-model)).
+
+**Scraper service** (Modal serverless): work in [vecinita-scraper](https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper)
+or monorepo `services/scraper`.
 
 ```bash
-cd apps/backend/model-service
-docker compose up   # uses the service's own docker-compose.yml
-```
-
-**Scraper service** (Modal serverless):
-
-```bash
-cd apps/backend/scraper-service
+git clone https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper.git
+cd vecinita-scraper
 cp .env.example .env
 modal serve   # hot-reloads locally via Modal sandbox
 ```
 
-**Embedding service** (Modal serverless):
+**Embedding service** (Modal serverless): work in the vecinita-embedding repository or monorepo `services/embedding-modal`.
 
 ```bash
-cd apps/backend/embedding-service
 modal serve main.py
 ```
 

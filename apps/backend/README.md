@@ -1,11 +1,12 @@
-# Backend Services
+# Backend layout
 
-This directory contains all backend services for the Vecinita platform.
+Legacy **git submodules** for `scraper-service`, `embedding-service`, and `model-service` under this
+directory were removed (feature `003-consolidate-scraper-dm`). Runtime integration uses **remote HTTP
+APIs** configured via `SCRAPER_SERVICE_BASE_URL`, `EMBEDDING_SERVICE_BASE_URL`, and
+`MODEL_SERVICE_BASE_URL` (see `packages/shared-config`) and `packages/service-clients`.
 
-| Service | Port | Description |
-|---------|------|-------------|
-| [scraper-service](scraper-service/) | 8001 | Data collection and orchestration |
-| [model-service](model-service/) | 8002 | ML model inference |
-| [embedding-service](embedding-service/) | 8003 | Text embedding / vectorization |
+For Modal deploys and Docker builds of the scraper stack, use the dedicated repositories or the
+**vecinita** monorepo paths:
 
-See [docs/architecture.md](../../docs/architecture.md) for the full dependency model.
+- Scraper: `services/scraper` (Render blueprint in monorepo root `render.yaml`)
+- Embedding / model: `services/embedding-modal`, `services/model-modal`, or deployed Modal endpoints
