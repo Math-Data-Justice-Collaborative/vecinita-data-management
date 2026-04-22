@@ -124,6 +124,18 @@ Recommended settings when building this repository directly:
 - Dockerfile Path: `Dockerfile`
 - Health Check Path: `/health`
 
+## CORS (browser ↔ DM API)
+
+The FastAPI surface must allow browser calls from the **data-management** Vite app. Set **`ALLOWED_ORIGINS`** (comma-separated) to include every origin that loads the SPA:
+
+| Origin | Typical use |
+|--------|-------------|
+| `http://localhost:5174` | DM Vite dev server (default in the vecinita monorepo) |
+| `http://localhost:4173` | DM preview / Playwright `webServer` |
+| `http://localhost:5173` | Chat SPA when testing both apps against the same API |
+
+Mirror the same values in the umbrella repo root **`.env.local.example`** (`ALLOWED_ORIGINS=...`) so local Compose and Render templates stay aligned.
+
 ## Contributing
 
 See [docs/contributing.md](docs/contributing.md) for development guidelines, branching strategy, and PR process.
