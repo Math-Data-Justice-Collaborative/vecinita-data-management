@@ -1,5 +1,6 @@
 from httpx import AsyncClient, HTTPStatusError, RequestError
 
+from service_clients import modal_invoker
 from shared_schemas.embedding import EmbedRequest, EmbedResponse
 
 _UPSTREAM_5XX_MESSAGE = (
@@ -35,6 +36,17 @@ class EmbeddingClient:
 
     async def embed(self, text: str, model_version: str | None = None) -> EmbedResponse:
         """Send an embedding request to embedding-service."""
+        if modal_invoker.modal_function_invocation_enabled():
+            try:
+                raw = await modal_invoker.embedding_embed_single_modal(text, model_version)
+                return EmbedResponse.model_validate(raw)
+            except EmbeddingUpstreamError:
+                raise
+            except Exception as exc:
+                raise EmbeddingUpstreamError(
+                    "Embedding Modal embed_query failed; verify MODAL_EMBEDDING_* env and credentials.",
+                    mapped_http_status=503,
+                ) from exc
         payload = EmbedRequest(text=text, model_version=model_version)
         try:
             async with AsyncClient(timeout=self.timeout) as client:

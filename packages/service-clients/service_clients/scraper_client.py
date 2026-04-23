@@ -1,6 +1,7 @@
-from httpx import AsyncClient, HTTPStatusError, RequestError
+from httpx import AsyncClient, HTTPStatusError, RequestError, Response
 from pydantic import HttpUrl
 
+from service_clients import modal_invoker
 from shared_schemas.scraper import ScrapeRequest, ScrapeResult
 
 _UPSTREAM_5XX_MESSAGE = "Upstream scraper service returned an error; verify scraper health and SCRAPER_SERVICE_BASE_URL."
@@ -52,6 +53,17 @@ class ScraperClient:
 
     async def health(self) -> dict:
         """Check scraper-service health."""
+        if modal_invoker.modal_function_invocation_enabled():
+            try:
+                return await modal_invoker.scraper_health_modal()
+            except ScraperUpstreamError:
+                raise
+            except Exception as exc:
+                raise ScraperUpstreamError(
+                    "Scraper Modal health_check failed; verify MODAL_SCRAPER_APP_NAME, "
+                    "MODAL_SCRAPER_HEALTH_FUNCTION, and Modal credentials.",
+                    mapped_http_status=503,
+                ) from exc
         try:
             async with AsyncClient(timeout=self.timeout) as client:
                 response = await client.get(f"{self.base_url}/health")
@@ -59,6 +71,38 @@ class ScraperClient:
                 return response.json()
         except HTTPStatusError as exc:
             raise _map_http_status_error(exc) from exc
+        except RequestError as exc:
+            raise ScraperUpstreamError(
+                _UNREACHABLE_MESSAGE, mapped_http_status=503
+            ) from exc
+
+    async def forward_jobs(
+        self,
+        method: str,
+        subpath: str,
+        *,
+        query: str = "",
+        content: bytes | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> Response:
+        """Forward HTTP to the scraper ``/jobs`` subtree (same ``base_url`` host).
+
+        Used by the data-management API app to proxy operator job CRUD without exposing a
+        separate scraper hostname to browsers (**FR-001**). Does not raise on 4xx/5xx so the
+        caller can mirror upstream status codes and bodies.
+        """
+        subpath = (subpath or "").strip("/")
+        url = f"{self.base_url}/jobs" + (f"/{subpath}" if subpath else "")
+        if query:
+            url = f"{url}?{query}"
+        hdrs: dict[str, str] = {"User-Agent": "vecinita-dm-api-jobs-proxy/1.0"}
+        if headers:
+            hdrs.update(headers)
+        if content is not None and "content-type" not in {k.lower() for k in hdrs}:
+            hdrs["Content-Type"] = "application/json"
+        try:
+            async with AsyncClient(timeout=self.timeout) as client:
+                return await client.request(method.upper(), url, content=content, headers=hdrs)
         except RequestError as exc:
             raise ScraperUpstreamError(
                 _UNREACHABLE_MESSAGE, mapped_http_status=503

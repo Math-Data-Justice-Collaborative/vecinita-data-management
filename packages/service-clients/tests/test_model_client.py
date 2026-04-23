@@ -92,3 +92,24 @@ async def test_health_connect_error_maps_to_503(
     with pytest.raises(ModelUpstreamError) as ei:
         await ModelClient(base_url).health()
     assert ei.value.mapped_http_status == 503
+
+
+@pytest.mark.asyncio
+async def test_predict_uses_modal_when_invocation_enabled(
+    base_url: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("MODAL_FUNCTION_INVOCATION", "1")
+    monkeypatch.setenv("MODAL_TOKEN_ID", "id")
+    monkeypatch.setenv("MODAL_TOKEN_SECRET", "secret")
+
+    async def _fake_predict(text: str, model_version: str | None) -> dict:
+        _ = model_version
+        return {"label": "x", "score": 0.5, "model_version": None}
+
+    monkeypatch.setattr(
+        model_client_mod.modal_invoker, "model_predict_modal", _fake_predict
+    )
+
+    result = await ModelClient(base_url).predict("q")
+    assert result.label == "x"
+    assert result.score == 0.5

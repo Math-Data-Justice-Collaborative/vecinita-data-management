@@ -1,69 +1,57 @@
-# Architecture
+# Architecture — data-management-api workspace
 
 ## Overview
 
-Vecinita is a community-driven data management platform built as a monorepo.
+This package is the **Vecinita data-management API** workspace: typed **service-clients**, shared
+config/schemas, and the FastAPI app under **`apps/backend/vecinita_dm_api/`** that fronts scraping and
+related orchestration for the **data-management SPA**.
 
-## Services
+## Services (conceptual)
 
-### frontend
+### Data-management API (this repo / Render `vecinita-data-management-api`)
 
-React/Vite web application (`vecinita-data-management-frontend`). Communicates with backends
-directly via `VITE_*` environment variables (scraper, model, embedding).
+Python service that exposes scraper-compatible **`/health`**, **`/jobs`**, and related HTTP routes
+to the **browser** only through the configured public hostname. **Server-side**, it reaches
+Modal-deployed scraper, embedding, and model workloads via **`modal.Function.from_name`** +
+**`.remote()` / `.spawn()`** when **`MODAL_FUNCTION_INVOCATION`** is enabled — not via direct
+browser calls to `*.modal.run` for those responsibilities (feature **007**).
 
-### model-service
+### Data-management SPA (`apps/data-management-frontend/` in monorepo root)
 
-LLM inference service (`vecinita-model`) using **Ollama**. Deployed to **Modal** for production.
-Local compose builds from `infra/docker/model-service.Dockerfile`, which clones the upstream repo.
+React/Vite dashboard. It MUST use **`VITE_DM_API_BASE_URL`** (legacy: `VITE_VECINITA_SCRAPER_API_URL`)
+pointing at the **data-management API** origin; scrape job CRUD uses **`{DM}/jobs`**.
 
-### scraper-service
+### Scraper / embedding / model Modal apps (`services/scraper`, `services/embedding-modal`, …)
 
-Serverless web-scraping pipeline (`vecinita-scraper`). Deployed to **Modal** and as a Docker image
-from the vecinita monorepo `services/scraper` directory (see monorepo `render.yaml`).
+Deployed Modal **functions** invoked from backends (gateway, agent, DM API) with workspace tokens.
+They are not the primary **browser** surface for operator scraping flows.
 
-### embedding-service
-
-Text vectorization service (`vecinita-embedding`). Deployed exclusively to **Modal**.
-
-## Deployment Model
-
-```
-frontend  ─────────────────────────────────────────────────► scraper  (Modal)
-              │                                VITE_*        model     (Modal / local Ollama)
-              │                                              embedding (Modal)
-```
-
-All arrows represent **runtime HTTP calls**, not code imports.
-
-## Dependency Graph
+## Deployment model (007)
 
 ```
-frontend
-  ├── scraper-service   (Modal)
-  ├── model-service     (Modal / local Ollama)
-  └── embedding-service (Modal)
+data-management SPA  ──HTTPS──►  data-management API  ──Modal SDK──►  scraper / embed / model apps
+        (VITE_DM_API_BASE_URL)           (public host)              (Function.from_name + remote/spawn)
 ```
 
-## Shared Packages
+## Shared packages (this workspace)
 
 | Package | Purpose |
 |---------|---------|
-| `shared-schemas` | Pydantic models for all API contracts |
-| `service-clients` | Typed async HTTP clients |
+| `shared-schemas` | Pydantic models for API contracts |
+| `service-clients` | Typed async clients + `modal_invoker` for upstream Modal/HTTP |
 | `shared-config` | Base settings using pydantic-settings |
 | `shared-logging` | Structured JSON logging |
 
-## Dependency Rules
+## Dependency rules
 
 1. `apps` may depend on `packages`
 2. `packages` must **never** depend on `apps`
-3. Lower-level services (`model-service`, `embedding-service`) must **not** depend on higher-level ones
-4. No circular dependencies
+3. Lower-level packages must **not** import FastAPI apps in a way that creates cycles
 
-## Communication Patterns
+## Communication patterns
 
 | Caller | Callee | Protocol | Notes |
 |--------|--------|----------|-------|
-| frontend | scraper | HTTPS | direct via `VITE_*` env var |
-| frontend | model | HTTPS | direct via `VITE_*` env var |
-| frontend | embedding | HTTPS | direct via `VITE_*` env var |
+| DM SPA | data-management API | HTTPS | Same origin family as `VITE_DM_API_BASE_URL` |
+| data-management API | Modal apps | Modal Python SDK | When `MODAL_FUNCTION_INVOCATION` + tokens set |
+| data-management API | upstream HTTP | HTTPS | Allowed for **non-production** / tests per **FR-009** |

@@ -1,12 +1,28 @@
-# Backend layout
+# Data-management API (FastAPI)
 
-Legacy **git submodules** for `scraper-service`, `embedding-service`, and `model-service` under this
-directory were removed (feature `003-consolidate-scraper-dm`). Runtime integration uses **remote HTTP
-APIs** configured via `SCRAPER_SERVICE_BASE_URL`, `EMBEDDING_SERVICE_BASE_URL`, and
-`MODEL_SERVICE_BASE_URL` (see `packages/shared-config`) and `packages/service-clients`.
+Operator-facing HTTP service for the data-management SPA: **scrape job paths** proxy to the
+configured scraper base URL via `service_clients.ScraperClient` (including Modal-backed
+`GET /health` when `MODAL_FUNCTION_INVOCATION` is enabled), and **`POST /embed`** / **`POST /predict`**
+delegate to `EmbeddingClient` and `ModelClient` for ingest-style calls (**feature 007** tasks **T017** / **T018**).
 
-For Modal deploys and Docker builds of the scraper stack, use the dedicated repositories or the
-**vecinita** monorepo paths:
+## Run locally (from vecinita monorepo root)
 
-- Scraper: `services/scraper` (Render blueprint in monorepo root `render.yaml`)
-- Embedding / model: `services/embedding-modal`, `services/model-modal`, or deployed Modal endpoints
+```bash
+make dev-data-management-api
+```
+
+Or manually (same `PYTHONPATH` as CI):
+
+```bash
+cd backend
+PYTHONPATH=../services/data-management-api/apps/backend:../services/data-management-api/packages/service-clients:../services/data-management-api/packages/shared-schemas:../services/data-management-api/packages/shared-config \
+  uv run python -m uvicorn vecinita_dm_api.app:create_app --factory --host 0.0.0.0 --port 8005
+```
+
+Configure downstream URLs via `SCRAPER_SERVICE_BASE_URL`, `EMBEDDING_SERVICE_BASE_URL`, and
+`MODEL_SERVICE_BASE_URL` (see `packages/shared-config`).
+
+## Layout
+
+- `pyproject.toml` — app metadata; runtime deps include `fastapi`, `uvicorn`, `httpx`, `modal`.
+- `vecinita_dm_api/` — `create_app()` factory and routers (`/health`, `/jobs`, `/embed`, `/predict`).

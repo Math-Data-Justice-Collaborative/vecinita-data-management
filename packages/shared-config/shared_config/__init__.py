@@ -45,6 +45,57 @@ class BaseServiceSettings(BaseSettings):
         ),
     )
 
+    # Modal function invocation (align with backend/src/services/modal/invoker.py).
+    modal_function_invocation: str = Field(
+        "",
+        validation_alias=AliasChoices("MODAL_FUNCTION_INVOCATION"),
+        description="auto|1|0|http — prefer Modal SDK for configured upstreams when enabled.",
+    )
+    modal_token_id: str = Field(
+        "",
+        validation_alias=AliasChoices("MODAL_TOKEN_ID", "MODAL_AUTH_KEY"),
+    )
+    modal_token_secret: str = Field(
+        "",
+        validation_alias=AliasChoices("MODAL_TOKEN_SECRET", "MODAL_AUTH_SECRET"),
+    )
+    modal_environment_name: str = Field(
+        "",
+        validation_alias=AliasChoices("MODAL_ENVIRONMENT_NAME", "MODAL_ENV"),
+    )
+    modal_scraper_app_name: str = Field(
+        "vecinita-scraper",
+        validation_alias=AliasChoices("MODAL_SCRAPER_APP_NAME"),
+    )
+    modal_scraper_health_function: str = Field(
+        "health_check",
+        validation_alias=AliasChoices("MODAL_SCRAPER_HEALTH_FUNCTION"),
+    )
+    modal_embedding_app_name: str = Field(
+        "vecinita-embedding",
+        validation_alias=AliasChoices("MODAL_EMBEDDING_APP_NAME"),
+    )
+    modal_embedding_single_function: str = Field(
+        "embed_query",
+        validation_alias=AliasChoices("MODAL_EMBEDDING_SINGLE_FUNCTION"),
+    )
+    modal_embedding_batch_function: str = Field(
+        "embed_batch",
+        validation_alias=AliasChoices("MODAL_EMBEDDING_BATCH_FUNCTION"),
+    )
+    modal_model_app_name: str = Field(
+        "vecinita-model",
+        validation_alias=AliasChoices("MODAL_MODEL_APP_NAME"),
+    )
+    modal_model_predict_function: str = Field(
+        "predict",
+        validation_alias=AliasChoices("MODAL_MODEL_PREDICT_FUNCTION"),
+    )
+    modal_model_chat_function: str = Field(
+        "chat_completion",
+        validation_alias=AliasChoices("MODAL_MODEL_CHAT_FUNCTION"),
+    )
+
     # CORS — set as a JSON array string: ALLOWED_ORIGINS='["https://example.com"]'
     # Defaults include the standard data-management-frontend dev port (5174)
     # and the chat-frontend dev ports.  In production override this via env var

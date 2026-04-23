@@ -17,7 +17,7 @@ service calls — the old `apps/backend/{scraper,embedding,model}-service` git s
 repo/
   apps/
     frontend/              # React/Vite UI  (submodule: vecinita-data-management-frontend)
-    backend/               # Placeholder / docs only (see apps/backend/README.md)
+    backend/               # FastAPI data-management API (see apps/backend/README.md)
 
   packages/
     shared-schemas/        # Pydantic/Zod shared types and API contracts

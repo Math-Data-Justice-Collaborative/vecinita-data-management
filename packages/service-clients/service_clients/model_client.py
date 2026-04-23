@@ -1,5 +1,6 @@
 from httpx import AsyncClient, HTTPStatusError, RequestError
 
+from service_clients import modal_invoker
 from shared_schemas.model import PredictRequest, PredictResponse
 
 _UPSTREAM_5XX_MESSAGE = "Upstream model service returned an error; verify deployment health and MODEL_SERVICE_BASE_URL."
@@ -36,6 +37,18 @@ class ModelClient:
         self, text: str, model_version: str | None = None
     ) -> PredictResponse:
         """Send a prediction request to model-service."""
+        if modal_invoker.modal_function_invocation_enabled():
+            try:
+                raw = await modal_invoker.model_predict_modal(text, model_version)
+                return PredictResponse.model_validate(raw)
+            except ModelUpstreamError:
+                raise
+            except Exception as exc:
+                raise ModelUpstreamError(
+                    "Model Modal predict RPC failed; verify MODAL_MODEL_APP_NAME, "
+                    "MODAL_MODEL_PREDICT_FUNCTION, and Modal credentials.",
+                    mapped_http_status=503,
+                ) from exc
         payload = PredictRequest(text=text, model_version=model_version)
         try:
             async with AsyncClient(timeout=self.timeout) as client:

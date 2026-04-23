@@ -102,3 +102,71 @@ async def test_health_request_error_maps_to_503(
         await ScraperClient(base_url).health()
     assert ei.value.mapped_http_status == 503
     assert "unreachable" in str(ei.value).lower()
+
+
+@pytest.mark.asyncio
+async def test_health_uses_modal_when_invocation_enabled(
+    base_url: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("MODAL_FUNCTION_INVOCATION", "1")
+    monkeypatch.setenv("MODAL_TOKEN_ID", "test-id")
+    monkeypatch.setenv("MODAL_TOKEN_SECRET", "test-secret")
+
+    async def _fake_modal_health() -> dict:
+        return {"status": "ok", "worker": "vecinita-scraper"}
+
+    monkeypatch.setattr(
+        scraper_client_mod.modal_invoker, "scraper_health_modal", _fake_modal_health
+    )
+
+    result = await ScraperClient(base_url).health()
+    assert result["status"] == "ok"
+    assert result["worker"] == "vecinita-scraper"
+
+
+@pytest.mark.asyncio
+async def test_forward_jobs_returns_upstream_status_without_raise(
+    base_url: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert str(request.url).startswith(f"{base_url}/jobs")
+        assert request.url.path == "/jobs"
+        return httpx.Response(200, json={"jobs": [], "limit": 50, "total": 0})
+
+    transport = httpx.MockTransport(handler)
+
+    def _async_client(*, timeout: float = 60.0, **_kw: object) -> httpx.AsyncClient:
+        return httpx.AsyncClient(transport=transport, timeout=timeout)
+
+    monkeypatch.setattr(scraper_client_mod, "AsyncClient", _async_client)
+
+    resp = await ScraperClient(base_url).forward_jobs("GET", "")
+    assert resp.status_code == 200
+    assert resp.json()["total"] == 0
+
+
+@pytest.mark.asyncio
+async def test_forward_jobs_subpath_and_query(
+    base_url: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/jobs/job-1/cancel"
+        assert "dry=1" in str(request.url)
+        return httpx.Response(200, json={"job_id": "job-1", "previous_status": "x", "new_status": "cancelled"})
+
+    transport = httpx.MockTransport(handler)
+
+    def _async_client(*, timeout: float = 60.0, **_kw: object) -> httpx.AsyncClient:
+        return httpx.AsyncClient(transport=transport, timeout=timeout)
+
+    monkeypatch.setattr(scraper_client_mod, "AsyncClient", _async_client)
+
+    resp = await ScraperClient(base_url).forward_jobs(
+        "POST",
+        "job-1/cancel",
+        query="dry=1",
+        content=b"{}",
+        headers={"Authorization": "Bearer t"},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["new_status"] == "cancelled"
