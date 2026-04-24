@@ -3,6 +3,8 @@ from functools import lru_cache
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from . import env_deprecation
+
 
 class BaseServiceSettings(BaseSettings):
     """Base settings shared by all Vecinita backend services.
@@ -10,6 +12,12 @@ class BaseServiceSettings(BaseSettings):
     List fields (e.g. cors_origins) must be provided as JSON arrays when
     set via environment variables:  ALLOWED_ORIGINS='["http://localhost:3000"]'
     """
+
+    open_api_key: str = Field(
+        "",
+        validation_alias=AliasChoices("OPEN_API_KEY", "OPENAI_API_KEY"),
+        description="Optional OpenAI-compatible API key (legacy OPENAI_API_KEY accepted).",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -112,4 +120,5 @@ class BaseServiceSettings(BaseSettings):
 
 @lru_cache
 def get_settings() -> BaseServiceSettings:
+    env_deprecation.warn_legacy_aliases()
     return BaseServiceSettings()
