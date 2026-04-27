@@ -8,7 +8,7 @@
 # NOTE: scraper-service and embedding-service are Modal serverless deployments
 # and are NOT included here. Deploy them from the vecinita-scraper / vecinita-embedding
 # repositories (or the vecinita monorepo `services/scraper`, `services/embedding-modal`).
-# Then set VECINITA_SCRAPER_API_URL and VECINITA_EMBEDDING_API_URL in a .env
+# Then set VECINITA_SCRAPER_API_URL and EMBEDDING_UPSTREAM_URL in a .env
 # file or pass them as environment variables before running compose.
 
 services:
@@ -18,9 +18,9 @@ services:
       dockerfile: ../../infra/docker/frontend.Dockerfile
       args:
         # VITE_* vars are baked into the bundle at build time — must be args, not runtime env
-        - VITE_VECINITA_MODEL_API_URL=${VITE_VECINITA_MODEL_API_URL:-https://vecinita--vecinita-model-api.modal.run}
+        - VITE_OLLAMA_BASE_URL=${VITE_OLLAMA_BASE_URL:-https://vecinita--vecinita-model-api.modal.run}
         - VITE_VECINITA_SCRAPER_API_URL=${VITE_VECINITA_SCRAPER_API_URL:-https://vecinita--vecinita-scraper-api-fastapi.modal.run}
-        - VITE_VECINITA_EMBEDDING_API_URL=${VITE_VECINITA_EMBEDDING_API_URL:-https://vecinita--vecinita-embedding-embeddingservicecontainer-api.modal.run}
+        - VITE_EMBEDDING_UPSTREAM_URL=${VITE_EMBEDDING_UPSTREAM_URL:-https://vecinita--vecinita-embedding-web-app.modal.run}
     ports:
       - "3000:3000"
 
