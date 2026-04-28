@@ -136,6 +136,18 @@ The FastAPI surface must allow browser calls from the **data-management** Vite a
 
 Mirror the same values in the umbrella repo root **`.env.local.example`** (`ALLOWED_ORIGINS=...`) so local Compose and Render templates stay aligned.
 
+## Pact (Modal RPC via ``service_clients``)
+
+From the vecinita repo root, with the usual ``PYTHONPATH`` for this subtree (see root **Makefile** ``test-backend-unit``), generate the sync-message pact:
+
+`pytest services/data-management-api/packages/service-clients/tests/pact/test_dm_service_clients_modal_message_pact.py -q`
+
+Output: ``services/data-management-api/pacts/vecinita-dm-service-clients-vecinita-modal-sdk.json`` (gitignored). Provider replay is documented in the umbrella ``backend/tests/pact/README.md``.
+
+**Jobs proxy → scraper** (browser ``/jobs`` forwarding):
+
+``pytest services/data-management-api/tests/pact/dm_api_jobs_proxy_scraper_consumer_pact.py -q`` (same ``PYTHONPATH`` as in the root **Makefile** ``test-backend-unit`` scraper line) → ``services/data-management-api/pacts/vecinita-dm-api-vecinita-scraper-jobs-http.json``.
+
 ## Contributing
 
 See [docs/contributing.md](docs/contributing.md) for development guidelines, branching strategy, and PR process.
