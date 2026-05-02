@@ -16,12 +16,12 @@ Modal-deployed scraper, embedding, and model workloads via **`modal.Function.fro
 **`.remote()` / `.spawn()`** when **`MODAL_FUNCTION_INVOCATION`** is enabled — not via direct
 browser calls to `*.modal.run` for those responsibilities (feature **007**).
 
-### Data-management SPA (`apps/data-management-frontend/` in monorepo root)
+### Data-management SPA (`frontends/data-management/` in monorepo root)
 
 React/Vite dashboard. It MUST use **`VITE_DM_API_BASE_URL`** (legacy: `VITE_VECINITA_SCRAPER_API_URL`)
 pointing at the **data-management API** origin; scrape job CRUD uses **`{DM}/jobs`**.
 
-### Scraper / embedding / model Modal apps (`services/scraper`, `services/embedding-modal`, …)
+### Scraper / embedding / model Modal apps (`modal-apps/scraper`, `modal-apps/embedding-modal`, …)
 
 Deployed Modal **functions** invoked from backends (gateway, agent, DM API) with workspace tokens.
 They are not the primary **browser** surface for operator scraping flows.

@@ -1,5 +1,5 @@
 # Local compose image for vecinita-model (replaces removed `apps/backend/model-service` submodule).
-# Production uses Modal; the vecinita monorepo also ships `services/model-modal/Dockerfile`.
+# Production uses Modal; the vecinita monorepo also ships `modal-apps/model-modal/Dockerfile`.
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

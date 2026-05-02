@@ -27,7 +27,7 @@
 
 ## Submodule / backend layout
 
-- **`services/data-management-api/apps/backend/`**: FastAPI app **`vecinita_dm_api`** (see `README.md` there). **`GET /health`** uses `ScraperClient.health()` (Modal or HTTP). **`/jobs/*`** proxies with `ScraperClient.forward_jobs` to the scraper service. **`POST /embed`** and **`POST /predict`** use `EmbeddingClient` / `ModelClient` (**T017** / **T018**).
+- **`apis/data-management-api/apps/backend/`**: FastAPI app **`vecinita_dm_api`** (see `README.md` there). **`GET /health`** uses `ScraperClient.health()` (Modal or HTTP). **`/jobs/*`** proxies with `ScraperClient.forward_jobs` to the scraper service. **`POST /embed`** and **`POST /predict`** use `EmbeddingClient` / `ModelClient` (**T017** / **T018**).
 
 ## Operator-safe errors (**T033**)
 
@@ -37,7 +37,7 @@ Until `apps/backend/` exposes FastAPI handlers (and any shared error helpers), *
 
 - **Primary live suite:** `backend/tests/integration/test_data_management_api_schema_schemathesis.py` (parametrized `case.call_and_validate`, hooks in `backend/tests/schemathesis_hooks.py`).
 - **Contract-only (no Bearer):** `test_data_management_openapi_defines_scraper_job_paths` in the same file fetches public `openapi.json` and asserts `/health` + `/jobs` exist (skips on auth-gated or unreachable hosts).
-- **DM submodule `services/data-management-api/tests/`:** add ASGITransport-only tests here only if a route cannot be exercised from the backend pytest harness (none required as of this inventory update).
+- **DM submodule `apis/data-management-api/tests/`:** add ASGITransport-only tests here only if a route cannot be exercised from the backend pytest harness (none required as of this inventory update).
 
 ---
 

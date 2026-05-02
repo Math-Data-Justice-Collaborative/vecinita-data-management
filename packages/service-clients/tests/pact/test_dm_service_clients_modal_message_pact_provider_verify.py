@@ -36,7 +36,7 @@ def test_verify_dm_modal_sdk_message_pact() -> None:
     if not pact_path.is_file():
         pytest.skip(
             f"Missing pact file {pact_path} — run: "
-            "pytest services/data-management-api/packages/service-clients/tests/pact/"
+            "pytest apis/data-management-api/packages/service-clients/tests/pact/"
             "test_dm_service_clients_modal_message_pact.py -q"
         )
 

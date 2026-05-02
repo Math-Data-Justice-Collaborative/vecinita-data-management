@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException, Request
+from starlette.responses import JSONResponse
 
 from service_clients.scraper_client import ScraperClient, ScraperUpstreamError
 from shared_config import get_settings
@@ -35,6 +38,19 @@ async def _forward_jobs(rest: str, request: Request):
             status_code=exc.mapped_http_status or 503,
             detail=str(exc),
         ) from exc
+    if request.method == "POST":
+        try:
+            payload = upstream.json()
+        except Exception:
+            payload = None
+        if isinstance(payload, dict):
+            payload.setdefault("source_of_truth", "postgres")
+            payload.setdefault(
+                "canonical_visibility_updated_at",
+                datetime.now(timezone.utc).isoformat(),
+            )
+            return JSONResponse(status_code=upstream.status_code, content=payload)
+
     return httpx_to_starlette(upstream)
 
 

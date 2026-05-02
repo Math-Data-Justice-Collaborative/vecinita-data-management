@@ -3,7 +3,7 @@
 Monorepo for the Vecinita data management platform — a community-driven data collection and analysis system.
 
 When checked out inside the **vecinita** umbrella repo, this tree lives at
-`services/data-management-api/` (clone from [github.com/Math-Data-Justice-Collaborative/vecinita](https://github.com/Math-Data-Justice-Collaborative/vecinita)).
+`apis/data-management-api/` (clone from [github.com/Math-Data-Justice-Collaborative/vecinita](https://github.com/Math-Data-Justice-Collaborative/vecinita)).
 
 **Remote-only backends (feature `003-consolidate-scraper-dm`)**: configure HTTP origins via
 `SCRAPER_SERVICE_BASE_URL`, `EMBEDDING_SERVICE_BASE_URL`, and `MODEL_SERVICE_BASE_URL` (see
@@ -35,7 +35,7 @@ repo/
 ```
 
 Deployable scraper / embedding / model **source trees** live in separate repositories (and in the
-vecinita monorepo as `services/scraper`, `services/embedding-modal`, `services/model-modal`).
+vecinita monorepo as `modal-apps/scraper`, `modal-apps/embedding-modal`, `modal-apps/model-modal`).
 
 ## Dependency Model
 
@@ -55,9 +55,9 @@ Rules enforced by convention:
 | Capability | Where to run / build | Notes |
 |------------|------------------------|-------|
 | frontend | `apps/frontend` (submodule) | Vite UI |
-| scraper | [vecinita-scraper](https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper) · monorepo `services/scraper` | Modal + Docker |
-| model | [vecinita-model](https://github.com/Math-Data-Justice-Collaborative/vecinita-model) · monorepo `services/model-modal` | Modal + local compose |
-| embedding | [vecinita-embedding](https://github.com/Math-Data-Justice-Collaborative/vecinita-embedding) · monorepo `services/embedding-modal` | Modal |
+| scraper | [vecinita-scraper](https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper) · monorepo `modal-apps/scraper` | Modal + Docker |
+| model | [vecinita-model](https://github.com/Math-Data-Justice-Collaborative/vecinita-model) · monorepo `modal-apps/model-modal` | Modal + local compose |
+| embedding | [vecinita-embedding](https://github.com/Math-Data-Justice-Collaborative/vecinita-embedding) · monorepo `modal-apps/embedding-modal` | Modal |
 
 ## Shared Packages
 
@@ -83,7 +83,7 @@ git submodule update --init apps/frontend
 From the **vecinita** monorepo root, initialise this repo with:
 
 ```bash
-git submodule update --init services/data-management-api
+git submodule update --init apis/data-management-api
 ```
 
 ### Local Development (Docker Compose)
@@ -115,7 +115,7 @@ Repeat for embedding/model from their repos as needed.
 ### Deploying the API on Render
 
 - **vecinita monorepo**: production image for `vecinita-data-management-api-v1` is built from
-  `services/scraper` (see root `render.yaml` — avoids nested submodule checkouts).
+  `modal-apps/scraper` (see root `render.yaml` — avoids nested submodule checkouts).
 - **Standalone clone of this repo**: the root `Dockerfile` clones [vecinita-scraper](https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper) at build time so the image does not depend on `apps/backend/scraper-service`.
 
 Recommended settings when building this repository directly:
@@ -140,13 +140,13 @@ Mirror the same values in the umbrella repo root **`.env.local.example`** (`ALLO
 
 From the vecinita repo root, with the usual ``PYTHONPATH`` for this subtree (see root **Makefile** ``test-backend-unit``), generate the sync-message pact:
 
-`pytest services/data-management-api/packages/service-clients/tests/pact/test_dm_service_clients_modal_message_pact.py -q`
+`pytest apis/data-management-api/packages/service-clients/tests/pact/test_dm_service_clients_modal_message_pact.py -q`
 
-Output: ``services/data-management-api/pacts/vecinita-dm-service-clients-vecinita-modal-sdk.json`` (gitignored). Provider replay is documented in the umbrella ``backend/tests/pact/README.md``.
+Output: ``apis/data-management-api/pacts/vecinita-dm-service-clients-vecinita-modal-sdk.json`` (gitignored). Provider replay is documented in the umbrella ``backend/tests/pact/README.md``.
 
 **Jobs proxy → scraper** (browser ``/jobs`` forwarding):
 
-``pytest services/data-management-api/tests/pact/dm_api_jobs_proxy_scraper_consumer_pact.py -q`` (same ``PYTHONPATH`` as in the root **Makefile** ``test-backend-unit`` scraper line) → ``services/data-management-api/pacts/vecinita-dm-api-vecinita-scraper-jobs-http.json``.
+``pytest apis/data-management-api/tests/pact/dm_api_jobs_proxy_scraper_consumer_pact.py -q`` (same ``PYTHONPATH`` as in the root **Makefile** ``test-backend-unit`` scraper line) → ``apis/data-management-api/pacts/vecinita-dm-api-vecinita-scraper-jobs-http.json``.
 
 ## Contributing
 

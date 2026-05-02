@@ -100,3 +100,10 @@ def test_predict_delegates_to_model_client(monkeypatch: pytest.MonkeyPatch) -> N
     assert r.status_code == 200
     assert r.json()["label"] == "ok"
     fake_predict.assert_awaited_once()
+
+
+def test_dm_api_requires_canonical_database_url_in_render(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("RENDER", "true")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:pass@localhost:5432/placeholder_db")
+    with pytest.raises(RuntimeError, match="canonical postgres"):
+        _fresh_client(monkeypatch)

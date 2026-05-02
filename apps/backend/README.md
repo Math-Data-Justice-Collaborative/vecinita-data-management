@@ -15,7 +15,7 @@ Or manually (same `PYTHONPATH` as CI):
 
 ```bash
 cd backend
-PYTHONPATH=../services/data-management-api/apps/backend:../services/data-management-api/packages/service-clients:../services/data-management-api/packages/shared-schemas:../services/data-management-api/packages/shared-config \
+PYTHONPATH=../apis/data-management-api/apps/backend:../apis/data-management-api/packages/service-clients:../apis/data-management-api/packages/shared-schemas:../apis/data-management-api/packages/shared-config \
   uv run python -m uvicorn vecinita_dm_api.app:create_app --factory --host 0.0.0.0 --port 8005
 ```
 

@@ -7,11 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from shared_config import get_settings
 
+from vecinita_dm_api.corpus_db_guard import validate_canonical_database_url
 from vecinita_dm_api.routers import health, ingest, jobs_proxy
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    validate_canonical_database_url(service_name="data-management-api")
     app = FastAPI(
         title="Vecinita Data Management API",
         description=(

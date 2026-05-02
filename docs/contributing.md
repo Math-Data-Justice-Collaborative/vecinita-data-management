@@ -48,7 +48,7 @@ through `VITE_*` endpoint environment variables.
 (clones [vecinita-model](https://github.com/Math-Data-Justice-Collaborative/vecinita-model)).
 
 **Scraper service** (Modal serverless): work in [vecinita-scraper](https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper)
-or monorepo `services/scraper`.
+or monorepo `modal-apps/scraper`.
 
 ```bash
 git clone https://github.com/Math-Data-Justice-Collaborative/vecinita-scraper.git
@@ -57,7 +57,7 @@ cp .env.example .env
 modal serve   # hot-reloads locally via Modal sandbox
 ```
 
-**Embedding service** (Modal serverless): work in the vecinita-embedding repository or monorepo `services/embedding-modal`.
+**Embedding service** (Modal serverless): work in the vecinita-embedding repository or monorepo `modal-apps/embedding-modal`.
 
 ```bash
 modal serve main.py

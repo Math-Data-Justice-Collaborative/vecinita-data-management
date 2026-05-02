@@ -1,6 +1,6 @@
 """Pact (sync message): DM ``service_clients`` ↔ Modal SDK RPC (``modal_invoker``).
 
-Writes ``services/data-management-api/pacts/vecinita-dm-service-clients-vecinita-modal-sdk.json``.
+Writes ``apis/data-management-api/pacts/vecinita-dm-service-clients-vecinita-modal-sdk.json``.
 """
 
 from __future__ import annotations

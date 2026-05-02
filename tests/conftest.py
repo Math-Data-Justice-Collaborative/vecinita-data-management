@@ -1,4 +1,4 @@
-"""Pytest configuration for ``services/data-management-api/tests`` (invoked from monorepo ``backend/``)."""
+"""Pytest configuration for ``apis/data-management-api/tests`` (invoked from monorepo ``backend/``)."""
 
 from __future__ import annotations
 

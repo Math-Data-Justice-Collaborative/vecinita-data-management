@@ -7,7 +7,7 @@
 #
 # NOTE: scraper-service and embedding-service are Modal serverless deployments
 # and are NOT included here. Deploy them from the vecinita-scraper / vecinita-embedding
-# repositories (or the vecinita monorepo `services/scraper`, `services/embedding-modal`).
+# repositories (or the vecinita monorepo `modal-apps/scraper`, `modal-apps/embedding-modal`).
 # Then set VECINITA_SCRAPER_API_URL and EMBEDDING_UPSTREAM_URL in a .env
 # file or pass them as environment variables before running compose.
 

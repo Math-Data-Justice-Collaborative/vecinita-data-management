@@ -1,6 +1,6 @@
 """Consumer Pact: DM API ``jobs_proxy`` → scraper-compatible ``/jobs`` HTTP (``ScraperClient.forward_jobs``).
 
-Writes ``services/data-management-api/pacts/vecinita-dm-api-vecinita-scraper-jobs-http.json`` (gitignored).
+Writes ``apis/data-management-api/pacts/vecinita-dm-api-vecinita-scraper-jobs-http.json`` (gitignored).
 """
 
 from __future__ import annotations
