@@ -19,7 +19,7 @@ services:
       args:
         # VITE_* vars are baked into the bundle at build time — must be args, not runtime env
         - VITE_OLLAMA_BASE_URL=${VITE_OLLAMA_BASE_URL:-https://vecinita--vecinita-model-api.modal.run}
-        - VITE_VECINITA_SCRAPER_API_URL=${VITE_VECINITA_SCRAPER_API_URL:-https://vecinita--vecinita-scraper-api-fastapi.modal.run}
+        - VITE_DM_API_BASE_URL=${VITE_DM_API_BASE_URL:-http://localhost:8005}
         - VITE_EMBEDDING_UPSTREAM_URL=${VITE_EMBEDDING_UPSTREAM_URL:-https://vecinita--vecinita-embedding-web-app.modal.run}
     ports:
       - "3000:3000"

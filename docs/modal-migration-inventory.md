@@ -47,7 +47,7 @@ Until `apps/backend/` exposes FastAPI handlers (and any shared error helpers), *
 
 | File | Notes |
 |------|--------|
-| `scraper-config.ts` | Reads `VITE_VECINITA_SCRAPER_API_URL` (legacy name; value should be **DM API origin**). Previously supported `VITE_USE_GATEWAY_MODAL_JOBS` + `VITE_VECINITA_GATEWAY_URL` → gateway `/api/v1/modal-jobs/scraper` (**removed** as default path in 007 — jobs use `${DM API}/jobs`). |
+| `scraper-config.ts` | Reads `VITE_DM_API_BASE_URL` (**DM API origin**). Previously supported `VITE_USE_GATEWAY_MODAL_JOBS` + `VITE_VECINITA_GATEWAY_URL` → gateway `/api/v1/modal-jobs/scraper` (**removed** as default path in 007 — jobs use `${DM API}/jobs`). |
 | `scraper-config.ts` | `VITE_MODAL_AUTH_KEY` / `VITE_MODAL_AUTH_SECRET` — **deprecated** browser Modal auth (diagnostic only). |
 | `rag-api.ts` | Uses `scraperRuntimeConfig.apiBaseUrl` and `scraperJobsApiRoot()` for fetch URLs. |
 | `modal-types.ts`, `types/dm-openapi.generated.ts` | Comments / schema text referencing Modal **implementation** (not browser URLs). |

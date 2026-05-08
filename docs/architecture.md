@@ -18,7 +18,7 @@ browser calls to `*.modal.run` for those responsibilities (feature **007**).
 
 ### Data-management SPA (`frontends/data-management/` in monorepo root)
 
-React/Vite dashboard. It MUST use **`VITE_DM_API_BASE_URL`** (legacy: `VITE_VECINITA_SCRAPER_API_URL`)
+React/Vite dashboard. It MUST use **`VITE_DM_API_BASE_URL`** (HTTP origin of the data-management API)
 pointing at the **data-management API** origin; scrape job CRUD uses **`{DM}/jobs`**.
 
 ### Scraper / embedding / model Modal apps (`modal-apps/scraper`, `modal-apps/embedding-modal`, …)
