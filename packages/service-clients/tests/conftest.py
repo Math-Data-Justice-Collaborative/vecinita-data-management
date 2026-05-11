@@ -24,3 +24,9 @@ def clear_modal_function_cache() -> None:
     clear_modal_function_lookup_cache()
     yield
     clear_modal_function_lookup_cache()
+
+
+@pytest.fixture(autouse=True)
+def force_http_service_clients_when_mocking(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unit tests patch ``httpx.AsyncClient``; inherited ``MODAL_FUNCTION_INVOCATION=auto`` + tokens would skip that path."""
+    monkeypatch.setenv("MODAL_FUNCTION_INVOCATION", "http")
